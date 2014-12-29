@@ -28,14 +28,14 @@
 
 #import <UIKit/UIKit.h>
 
-extern NSString * const MSCollectionElementKindTimeRowHeader;
-extern NSString * const MSCollectionElementKindDayColumnHeader;
-extern NSString * const MSCollectionElementKindTimeRowHeaderBackground;
-extern NSString * const MSCollectionElementKindDayColumnHeaderBackground;
-extern NSString * const MSCollectionElementKindCurrentTimeIndicator;
-extern NSString * const MSCollectionElementKindCurrentTimeHorizontalGridline;
-extern NSString * const MSCollectionElementKindVerticalGridline;
-extern NSString * const MSCollectionElementKindHorizontalGridline;
+extern NSString *const MSCollectionElementKindTimeRowHeader;
+extern NSString *const MSCollectionElementKindDayColumnHeader;
+extern NSString *const MSCollectionElementKindTimeRowHeaderBackground;
+extern NSString *const MSCollectionElementKindDayColumnHeaderBackground;
+extern NSString *const MSCollectionElementKindCurrentTimeIndicator;
+extern NSString *const MSCollectionElementKindCurrentTimeHorizontalGridline;
+extern NSString *const MSCollectionElementKindVerticalGridline;
+extern NSString *const MSCollectionElementKindHorizontalGridline;
 
 typedef NS_ENUM(NSUInteger, MSSectionLayoutType) {
     MSSectionLayoutTypeHorizontalTile,
@@ -68,11 +68,13 @@ typedef NS_ENUM(NSUInteger, MSHeaderLayoutType) {
 @property (nonatomic, assign) MSSectionLayoutType sectionLayoutType;
 @property (nonatomic, assign) MSHeaderLayoutType headerLayoutType;
 @property (nonatomic, assign) BOOL displayHeaderBackgroundAtOrigin;
+@property (nonatomic, assign) BOOL shouldFloatColumnHeader; //Allows the ability to not float the section headers in a MSSectionLayoutTypeVerticalTile view
 
 - (NSDate *)dateForTimeRowHeaderAtIndexPath:(NSIndexPath *)indexPath;
 - (NSDate *)dateForDayColumnHeaderAtIndexPath:(NSIndexPath *)indexPath;
 
 - (void)scrollCollectionViewToClosetSectionToCurrentTimeAnimated:(BOOL)animated;
+- (void)scrollCollectionViewToClosetSectionToTime:(NSDate *)dateTime animated:(BOOL)animated;
 
 // Since a "reloadData" on the UICollectionView doesn't call "prepareForCollectionViewUpdates:", this method must be called first to flush the internal caches
 - (void)invalidateLayoutCache;

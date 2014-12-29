@@ -431,7 +431,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
         CGFloat calendarGridMinY = (columnMinY + self.dayColumnHeaderHeight + self.contentMargin.top);
         
         // Day Column Header
-        CGFloat dayColumnHeaderMinY = fminf(fmaxf(self.collectionView.contentOffset.y, columnMinY), (nextColumnMinY - self.dayColumnHeaderHeight));
+        CGFloat dayColumnHeaderMinY = self.shouldFloatColumnHeader ? fminf(fmaxf(self.collectionView.contentOffset.y, columnMinY), (nextColumnMinY - self.dayColumnHeaderHeight)) : columnMinY;
         BOOL dayColumnHeaderFloating = ((dayColumnHeaderMinY > columnMinY) || self.displayHeaderBackgroundAtOrigin);
         NSIndexPath *dayColumnHeaderIndexPath = [NSIndexPath indexPathForRow:0 inSection:section];
         UICollectionViewLayoutAttributes *dayColumnHeaderAttributes = [self layoutAttributesForSupplementaryViewAtIndexPath:dayColumnHeaderIndexPath ofKind:MSCollectionElementKindDayColumnHeader withItemCache:self.dayColumnHeaderAttributes];
@@ -747,6 +747,7 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
     self.contentMargin = ((UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) ? UIEdgeInsetsMake(30.0, 0.0, 30.0, 30.0) : UIEdgeInsetsMake(20.0, 0.0, 20.0, 10.0));
     
     self.displayHeaderBackgroundAtOrigin = YES;
+    self.shouldFloatColumnHeader = YES;
     self.sectionLayoutType = ((UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) ? MSSectionLayoutTypeHorizontalTile : MSSectionLayoutTypeVerticalTile);
     self.headerLayoutType = MSHeaderLayoutTypeDayColumnAboveTimeRow;
     
@@ -859,7 +860,15 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
 - (void)scrollCollectionViewToClosetSectionToCurrentTimeAnimated:(BOOL)animated
 {
     if (self.collectionView.numberOfSections != 0) {
-        NSInteger closestSectionToCurrentTime = [self closestSectionToCurrentTime];
+        NSDate *currentDate = [[self.delegate currentTimeComponentsForCollectionView:self.collectionView layout:self] beginningOfDay];
+        [self scrollCollectionViewToClosetSectionToTime:currentDate animated:animated];
+    }
+}
+
+- (void)scrollCollectionViewToClosetSectionToTime:(NSDate *)dateTime animated:(BOOL)animated
+{
+    if (self.collectionView.numberOfSections != 0) {
+        NSInteger closestSectionToCurrentTime = [self closestSectionToTime:dateTime];
         CGPoint contentOffset;
         CGRect currentTimeHorizontalGridlineattributesFrame = [self.currentTimeHorizontalGridlineAttributes[[NSIndexPath indexPathForItem:0 inSection:0]] frame];
         if (self.sectionLayoutType == MSSectionLayoutTypeHorizontalTile) {
@@ -895,22 +904,29 @@ NSUInteger const MSCollectionMinBackgroundZ = 0.0;
         }
         [self.collectionView setContentOffset:contentOffset animated:animated];
     }
+
 }
 
 - (NSInteger)closestSectionToCurrentTime
 {
     NSDate *currentDate = [[self.delegate currentTimeComponentsForCollectionView:self.collectionView layout:self] beginningOfDay];
+    return [self closestSectionToTime:currentDate];
+}
+
+- (NSInteger)closestSectionToTime:(NSDate *)dateTime
+{
     NSTimeInterval minTimeInterval = CGFLOAT_MAX;
     NSInteger closestSection = NSIntegerMax;
     for (NSInteger section = 0; section < self.collectionView.numberOfSections; section++) {
         NSDate *sectionDayDate = [self.delegate collectionView:self.collectionView layout:self dayForSection:section];
-        NSTimeInterval timeInterval = [currentDate timeIntervalSinceDate:sectionDayDate];
+        NSTimeInterval timeInterval = [dateTime timeIntervalSinceDate:sectionDayDate];
         if ((timeInterval <= 0) && abs(timeInterval) < minTimeInterval) {
             minTimeInterval = abs(timeInterval);
             closestSection = section;
         }
     }
     return ((closestSection != NSIntegerMax) ? closestSection : 0);
+
 }
 
 #pragma mark Section Sizing
